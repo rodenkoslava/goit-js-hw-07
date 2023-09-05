@@ -1,53 +1,54 @@
 import { galleryItems } from "./gallery-items.js";
-// Change code below this line
-// console.log(galleryItems);
 
-const placeElementRef = document.querySelector(".gallery");
+const galleryEl = document.querySelector(".gallery");
+const bodyEl = document.querySelector("body");
+let modalImage;
 
-const createGalleryItem = (item) => {
-  const galleryItem = document.createElement("li");
-  galleryItem.classList.add("gallery__item");
+const createGalleryMarkup = galleryItems
+  .map(
+    ({ original, preview, description }) => `
+    <div class="gallery__item">
+        <a class="gallery__link" href="${original}">
+            <img class="gallery__image"src="${preview}" data-source="${original}" alt= "${description}"/>
+        </a>
+    </div>`
+  )
+  .join("");
 
-  const galleryLink = document.createElement("a");
-  galleryLink.classList.add("gallery__link");
-  galleryLink.href = item.original;
+galleryEl.insertAdjacentHTML("beforeend", createGalleryMarkup);
 
-  const galleryImage = document.createElement("img");
-  galleryImage.classList.add("gallery__image");
-  galleryImage.src = item.preview;
-  galleryImage.setAttribute("data-source", item.original);
-  galleryImage.alt = item.description;
+const onGalleryClick = (e) => {
+  e.preventDefault();
 
-  galleryLink.appendChild(galleryImage);
-  galleryItem.appendChild(galleryLink);
+  if (e.target.nodeName !== "IMG") {
+    return;
+  }
 
-  return galleryItem;
+  onOpenModal(e.target.dataset.source);
 };
 
-const galleryFragment = document.createDocumentFragment();
+galleryEl.addEventListener("click", onGalleryClick);
 
-galleryItems.forEach((item) => {
-  const galleryItem = createGalleryItem(item);
-  galleryFragment.appendChild(galleryItem);
-});
+const onCreateModal = (img) =>
+  basicLightbox.create(`<img src="${img}" width="1280" alt="${img}">`, {
+    closable: true,
+    onShow: (onCreateModal) => window.addEventListener("keyup", onKeyPress),
+    onClose: (onCreateModal) => window.removeEventListener("keyup", onKeyPress),
+  });
 
-placeElementRef.appendChild(galleryFragment);
+const onOpenModal = (img) => {
+  modalImage = onCreateModal(img);
+  modalImage.show();
 
-let instance = null;
+  console.log("Open modal");
+};
 
-placeElementRef.addEventListener("click", (event) => {
-  event.preventDefault();
-  if (event.target.classList.contains("gallery__image")) {
-    const imageSource = event.target.dataset.source;
-    instance = basicLightbox.create(`
-      <img src="${imageSource}" width="800" height="600">
-    `);
-    instance.show();
-  }
-});
+// Добавление закрытия модального окна по нажатию клавиши `Escape`.
 
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    instance.close();
-  }
-});
+const onKeyPress = (e) => {
+  if (e.code === "Escape") modalImage.close();
+
+  console.log("Close modal with escape");
+};
+
+console.log(galleryItems);
